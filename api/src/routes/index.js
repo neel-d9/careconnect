@@ -1,0 +1,31 @@
+import { Router } from 'express';
+import { requireAuth, requireRole } from '../middleware/auth.js';
+import * as c from '../controllers/index.js';
+const r=Router();
+
+r.post('/auth/login',c.login);
+r.get('/auth/demo-profiles', c.demoProfiles);
+r.post('/auth/quick-switch', c.quickSwitch);
+r.get('/auth/me',requireAuth,c.me);
+
+r.get('/patients',requireAuth,c.listPatients);
+r.get('/patients/:id',requireAuth,c.getPatient);
+r.get('/patients/:id/dashboard',requireAuth,c.patientDashboard);
+r.get('/patients/:patientId/audit',requireAuth,c.getAudit);
+r.get('/clinics',requireAuth,c.listClinics);
+r.get('/clinics/count',requireAuth,c.countClinics);
+r.get('/clinics/:id',requireAuth,c.getClinic);
+r.get('/clinics/:id/dashboard',requireAuth,c.clinicDashboard);
+r.get('/appointments',requireAuth,c.listAppointments);
+r.get('/appointments/clinic/:id',requireAuth,c.listAppointments);
+r.get('/appointments/:id',requireAuth,c.getAppointment);
+r.post('/appointments/book',requireAuth,requireRole('patient'),c.book);
+r.patch('/appointments/:id/status',requireAuth,c.status);
+r.get('/analytics/window',requireAuth,requireRole('clinic'),c.analyticsWindow);
+r.get('/analytics/window/rank/:name',requireAuth,requireRole('clinic'),c.analyticsWindowRank);
+r.get('/analytics/summary',requireAuth,requireRole('clinic'),c.analyticsSummary);
+r.post('/analytics/refresh',requireAuth,requireRole('clinic'),c.analyticsRefresh);
+r.get('/nurses/nearby',requireAuth,c.nearbyNurse);
+r.get('/reviews/analytics/:id',requireAuth,c.reviews);
+r.get('/medical-catalog',requireAuth,c.catalog);
+export default r;
