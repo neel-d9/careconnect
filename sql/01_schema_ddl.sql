@@ -13,8 +13,10 @@ CREATE TABLE patients (
 CREATE TABLE clinics (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    latitude DECIMAL(9,6) NOT NULL,
-    longitude DECIMAL(9,6) NOT NULL,
+    latitude DECIMAL(9,6) NOT NULL
+        CHECK (latitude BETWEEN -90 AND 90),
+    longitude DECIMAL(9,6) NOT NULL
+        CHECK (longitude BETWEEN -180 AND 180),
     is_accepting_patients BOOLEAN NOT NULL DEFAULT TRUE
 );
 
@@ -22,11 +24,14 @@ CREATE TABLE clinics (
 CREATE TABLE wallet_audit_logs (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     patient_id UUID NOT NULL,
-    amount_changed DECIMAL(10,2) NOT NULL,
-    action_type VARCHAR(50) NOT NULL,
-    balance_after DECIMAL(10,2) NOT NULL,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+    amount_changed DECIMAL(10,2) NOT NULL
+        CHECK (amount_changed > 0.00),
+    action_type VARCHAR(50) NOT NULL
+        CHECK (action_type IN ('DEBIT', 'CREDIT')),
+    balance_after DECIMAL(10,2) NOT NULL
+        CHECK (balance_after >= 0.00),
+    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE RESTRICT
 );
 
 --  appointments table
@@ -34,9 +39,10 @@ CREATE TABLE appointments (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     patient_id UUID NOT NULL,
     clinic_id UUID NOT NULL,
-    copay_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    copay_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00
+        CHECK (copay_amount >= 0.00),
     status appointment_status NOT NULL DEFAULT 'WAITING',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
-    FOREIGN KEY (clinic_id) REFERENCES clinics(id) ON DELETE CASCADE
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE RESTRICT,
+    FOREIGN KEY (clinic_id) REFERENCES clinics(id) ON DELETE RESTRICT
 );

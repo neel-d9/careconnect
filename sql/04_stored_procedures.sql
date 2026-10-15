@@ -21,7 +21,7 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1
         FROM clinics
-        WHERE id = p_clinic_id
+        WHERE id = p_clinic_id AND is_accepting_patients = TRUE
     ) THEN
         RAISE EXCEPTION 'Clinic does not exist';
     END IF;
