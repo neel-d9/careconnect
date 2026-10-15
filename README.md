@@ -1,15 +1,16 @@
-# CareConnect Database
+# CareConnect — Full-Stack Web Application (Team 12)
 
 ## Repository Submission Details
 
-- GitHub repository: https://github.com/MJT444/careconnect
-- Final commit hash: `fa841f6e3386597405c5dfdcdbfca96ca72a17f7`
+- Demo link: 
+- GitHub repository: 
+- Final commit hash: 
 
 ## Overview
 
-This project implements CareConnect's healthcare database across PostgreSQL and MongoDB. PostgreSQL manages the relational hospital appointment and HSA (Health Savings Account) system, while MongoDB supports real-time nurse location queries and patient review analytics.
+This repository contains **Assignment 2: Front End Design & Full-Stack Integration** for **CareConnect (Project 4)** by **Team 12**.
 
-It demonstrates relational schema design, constraints, indexes, triggers, stored procedures, materialized views, window functions, geospatial aggregation, TTL data retention, and multi-faceted analytics.
+We inherited the Assignment 1 database codebase (PostgreSQL & MongoDB) and engineered an end-to-end medical triage and patient management web application. The solution couples a high-performance React 18/Vite single-page application (`web/`) with a secure Express.js REST API layer (`api/`), automated transaction test suites, role-based demo actor switching, and responsive design adhering to all 16 project wireframes.
 
 ---
 
@@ -72,6 +73,106 @@ performance/
 ├── mongo_execution_stats.json
 └── postgres_explain_analyzes.txt
 ```
+
+---
+
+# Assignment 2 — Full-Stack Web Application & API Layer
+
+## 1. Overview & Technology Choices
+
+For Assignment 2, our team built a responsive web application (`web/`) backed by an Express.js API (`api/`) connecting to the PostgreSQL and MongoDB databases from Assignment 1:
+
+- **Frontend**: React 18, Vite, React Router 6, Recharts, Leaflet, Lucide Icons, and Vanilla CSS design system (`web/src/styles/app.css`) following the wireframes in `docs/design/`. We selected Vanilla CSS for precise design token control and zero CSS framework overhead.
+- **Backend**: Node.js, Express.js, `pg` connection pool, MongoDB Node.js driver, JWT session tokens, and parameterized queries. All business rules, transactions, and analytics are executed directly in database procedures, views, and aggregation pipelines.
+- **Visual Design**: Matches the wireframe specifications in `docs/design/`, including responsive mobile/laptop layouts, global navigation, zero-friction actor switching, and dedicated UI states.
+
+---
+
+## 2. Assumptions
+
+- **Database Setup**: PostgreSQL runs locally on port 5432 (`careconnect` database) and MongoDB runs locally on port 27017 (`medical_db` database).
+- **Geospatial Proximity**: Active mobile nurses emit location telemetry periodically with a 2-hour TTL retention policy. Nurse dispatch queries search within a 5 km radius of clinic coordinates.
+- **Demo Authentication**: Real user registration is bypassed per assignment specifications; demo profiles can be switched instantly from the navigation dropdown or profile switcher screen.
+- **Financial Audit Immutability**: All HSA balance deductions and additions are automatically logged via database triggers in an append-only ledger (`wallet_audit_logs`).
+
+---
+
+## 3. Quickstart & Setup
+
+### Prerequisites
+- Node.js (v18+)
+- Python 3.10+ (for seeders in `data_generation/`)
+- PostgreSQL running on port 5432 (`careconnect` database)
+- MongoDB running on port 27017 (`medical_db` database)
+
+### Database Seeding
+From the repository root:
+```bash
+cd data_generation
+pip install -r requirements.txt
+
+# Seed PostgreSQL (patients, clinics, appointments, audit logs)
+python postgres_seeder.py
+
+# Seed MongoDB (500k nurse pings with TTL, 20k reviews, medical catalogs)
+python mongo_seeder.py
+```
+
+### Backend API (`api/`)
+```bash
+cd api
+npm install
+npm run dev
+```
+API runs at: `http://localhost:5000/api`
+
+### Frontend Web (`web/`)
+```bash
+cd web
+npm install
+npm run dev
+```
+Frontend runs at: `http://localhost:5173`
+
+### Running the Test Suite
+As required by Step 4 of the assignment guidelines, automated tests cover the primary transaction workflow (stored procedure booking, balance math, insufficient balance rollback, and partial unique index conflicts):
+```bash
+cd api
+npm test
+```
+
+---
+
+## 4. Demo Authentication & Actor Switching
+Per the assignment instructions, real user registration is not required. A 1-click **Profile Switcher** is accessible in the navbar dropdown and at `/switch-profile`:
+- **Patient**: Seeded UUID with demo password `admin` (e.g. *Sarah Jenkins* with active HSA balance)
+- **Clinic**: Seeded UUID with demo password `root` (e.g. *Aaronfurt Care Clinic*)
+
+---
+
+## 5. UI Compliance, Data Discrepancy Prevention & State Handling
+- **Wireframe Alignment**: Fully matches the 16 wireframes in `docs/design/`, including responsive mobile/laptop layouts, global navigation, and the four updated wireframes (`C1_clinic_dashboard`, `C2_clinic_patients`, `P1_patient_dashboard`, and `C5b_medical_catalog`).
+- **Zero Mock / Fallback Data**: Every screen binds directly to live records in PostgreSQL and MongoDB. No mock objects or hardcoded fallback states are rendered.
+- **Skeleton Loading & State Handling**: Standardized skeleton loaders (`.skeleton-container`, `.skeleton-line`) are rendered during initial data fetches across screens (including `/states` and `/clinic/nurse-map`) rather than premature empty text.
+- **Handover Note**: Inherited codebase review, edge cases, improvements, and database architectural suggestions are documented in [`docs/handover_note.md`](docs/handover_note.md).
+- **API Documentation**: Detailed endpoint specifications are documented in [`docs/api_endpoints.md`](docs/api_endpoints.md).
+
+---
+
+## 6. Team Member Contribution & Workload Distribution Matrix (4 Members)
+
+| Member | Assigned Wireframes (`docs/design/`) | Full-Stack Feature & Layer Ownership | Database Workflows / Responsibilities |
+|---|---|---|---|
+| **Anmol Sharma** | • `00_role_switcher.png`<br>• `00_profile_switcher_dropdown.png`<br>• `C1_clinic_dashboard.png`<br>• `C2_clinic_patients.png` | **App Shell, Actor Switcher, & Clinic Queue Triage**<br>• `web/src/layouts/AppLayout.jsx`<br>• `web/src/context/AuthContext.jsx`<br>• `web/src/pages/SwitchProfile.jsx`<br>• `web/src/pages/ClinicDashboard.jsx`<br>• `web/src/pages/ClinicPatients.jsx`<br>• `api/src/services/auth.service.js`<br>• `api/src/services/clinic.service.js` | • Demo profile retrieval & JWT switching<br>• Clinic appointment queue filtering (`WAITING`, `IN_CONSULTATION`, `DISCHARGED`)<br>• Status transition stepper (`PATCH /api/appointments/:id/status`) enforcing `idx_active_consult` |
+| **Diptoneel De** | • `P1_patient_dashboard.png`<br>• `P3_book_appointment.png`<br>• `P5_patient_wallet.png` | **Patient Portal, Booking (Workflow 1), & HSA Wallet**<br>• `web/src/pages/PatientDashboard.jsx`<br>• `web/src/pages/BookAppointment.jsx`<br>• `web/src/pages/Wallet.jsx`<br>• `api/src/services/patient.service.js`<br>• `api/src/services/appointment.service.js`<br>• `api/src/services/audit.service.js` | • **Workflow 1**: PostgreSQL stored procedure `sp_book_appointment()` atomic transaction<br>• Real-time HSA deduction math & insufficient funds error trapping<br>• Financial audit trail (`wallet_audit_logs`) populated by database trigger |
+| **Krishna Saboo** | • `C4_clinic_analytics.png`<br>• `P2_patient_appointments.png`<br>• `S_ui_states.png` | **Clinic Analytics (Workflow 2), UI States, & Patient Appointments**<br>• `web/src/pages/Analytics.jsx`<br>• `web/src/pages/PatientAppointments.jsx`<br>• `web/src/pages/States.jsx`<br>• `web/src/styles/app.css`<br>• `api/src/services/analytics.service.js`<br>• `api/src/middleware/errorHandler.js` | • **Workflow 2**: SQL window functions (`06_window_analytics.sql`) for 7-day moving average copay & `DENSE_RANK()`<br>• Materialized view `mv_clinic_monthly_discharges` and on-demand refresh (`refresh_clinic_monthly_mv()`)<br>• Loading skeleton, empty state, and API error retry cards |
+| **Jyoti Pal** | • `C3_nurse_map.png`<br>• `P4_clinics_reviews.png`<br>• `C5a_clinic_reviews.png`<br>• `C5b_medical_catalog.png` | **Nurse Telemetry Map (Workflow 3), Reviews & Medical Catalog (Workflow 4)**<br>• `web/src/pages/NurseMap.jsx`<br>• `web/src/pages/Clinics.jsx`<br>• `web/src/pages/Reviews.jsx`<br>• `web/src/pages/Catalog.jsx`<br>• `api/src/services/mongo.service.js` | • **Workflow 3**: MongoDB `$geoNear` aggregation pipeline on `NursePings` with `2dsphere` index (5 km geofence)<br>• Interactive Leaflet map with simulated live GPS telemetry polling<br>• **Workflow 4**: MongoDB `$facet` multi-pipeline aggregation on `PatientReviews` (rating distribution, tags, average)<br>• Flexible medical catalog document explorer (`MedicalCatalogs`) |
+
+---
+
+# Inherited System Documentation (Assignment 1 — CareConnect Database)
+
+> **Note on Inherited Codebase:** The section below preserves the original Assignment 1 documentation for the underlying PostgreSQL relational schema and MongoDB collections. For our comprehensive review, edge cases uncovered, database bug fixes, and architectural suggestions, see [`docs/handover_note.md`](docs/handover_note.md).
 
 ---
 
@@ -504,85 +605,3 @@ The MongoDB commands assume the local connection string shown above. Update the 
 CareConnect combines PostgreSQL's transactional relational model with MongoDB's geospatial and aggregation capabilities. PostgreSQL provides data integrity, concurrency protection, financial auditing, efficient reporting, and revenue analytics. MongoDB provides expiring nurse location data, nearest-active-nurse discovery, and review analytics through a single `$facet` pipeline.
 
 ---
-
-# Assignment 2 — Full-Stack Web Application & API Layer
-
-## 1. Overview
-For Assignment 2, our team built a responsive web application (`web/`) backed by an Express.js API (`api/`) connecting to the PostgreSQL and MongoDB databases from Assignment 1.
-
-- **Frontend**: React 18, Vite, React Router 6, Recharts, Leaflet, Lucide Icons, and Vanilla CSS design system (`web/src/styles/app.css`) following the wireframes in `docs/design/`.
-- **Backend**: Node.js, Express.js, `pg` connection pool, MongoDB Node.js driver, JWT session tokens, and parameterized queries. All business rules, transactions, and analytics are executed directly in database procedures, views, and aggregation pipelines.
-- **Visual Design**: Matches the wireframe specifications in `docs/design/`, including responsive mobile/laptop layouts, global navigation, zero-friction actor switching, and dedicated UI states.
-
----
-
-## 2. Quickstart & Setup
-
-### Prerequisites
-- Node.js (v18+)
-- Python 3.10+ (for seeders in `data_generation/`)
-- PostgreSQL running on port 5432 (`careconnect` database)
-- MongoDB running on port 27017 (`medical_db` database)
-
-### Database Seeding
-From the repository root:
-```bash
-cd data_generation
-pip install -r requirements.txt
-
-# Seed PostgreSQL (patients, clinics, appointments, audit logs)
-python postgres_seeder.py
-
-# Seed MongoDB (500k nurse pings with TTL, 20k reviews, medical catalogs)
-python mongo_seeder.py
-```
-
-### Backend API (`api/`)
-```bash
-cd api
-npm install
-npm run dev
-```
-API runs at: `http://localhost:5000/api`
-
-### Frontend Web (`web/`)
-```bash
-cd web
-npm install
-npm run dev
-```
-Frontend runs at: `http://localhost:5173`
-
-### Running the Test Suite
-As required by Step 4 of the assignment guidelines, automated tests cover the primary transaction workflow (stored procedure booking, balance math, insufficient balance rollback, and partial unique index conflicts):
-```bash
-cd api
-npm test
-```
-
----
-
-## 3. Demo Authentication & Actor Switching
-Per the assignment instructions, real user registration is not required. A 1-click **Profile Switcher** is accessible in the navbar dropdown and at `/switch-profile`:
-- **Patient**: Seeded UUID with demo password `admin` (e.g. *Sarah Jenkins* with active HSA balance)
-- **Clinic**: Seeded UUID with demo password `root` (e.g. *Aaronfurt Care Clinic*)
-
----
-
-## 4. UI Compliance, Data Discrepancy Prevention & State Handling
-- **Wireframe Alignment**: Fully matches the 16 wireframes in `docs/design/`, including responsive mobile/laptop layouts, global navigation, and the four updated wireframes (`C1_clinic_dashboard`, `C2_clinic_patients`, `P1_patient_dashboard`, and `C5b_medical_catalog`).
-- **Zero Mock / Fallback Data**: Every screen binds directly to live records in PostgreSQL and MongoDB. No mock objects or hardcoded fallback states are rendered.
-- **Skeleton Loading & State Handling**: Standardized skeleton loaders (`.skeleton-container`, `.skeleton-line`) are rendered during initial data fetches across screens (including `/states` and `/clinic/nurse-map`) rather than premature empty text.
-- **Handover Note**: Inherited codebase review, edge cases, improvements, and database architectural suggestions are documented in [`docs/handover_note.md`](docs/handover_note.md).
-- **API Documentation**: Detailed endpoint specifications are documented in [`docs/api_endpoints.md`](docs/api_endpoints.md).
-
----
-
-## 5. Team Member Contribution & Workload Distribution Matrix (4 Members)
-
-| Member | Assigned Wireframes (`docs/design/`) | Full-Stack Feature & Layer Ownership | Database Workflows / Responsibilities |
-|---|---|---|---|
-| **Anmol Sharma** | • `00_role_switcher.png`<br>• `00_profile_switcher_dropdown.png`<br>• `C1_clinic_dashboard.png`<br>• `C2_clinic_patients.png` | **App Shell, Actor Switcher, & Clinic Queue Triage**<br>• `web/src/layouts/AppLayout.jsx`<br>• `web/src/context/AuthContext.jsx`<br>• `web/src/pages/SwitchProfile.jsx`<br>• `web/src/pages/ClinicDashboard.jsx`<br>• `web/src/pages/ClinicPatients.jsx`<br>• `api/src/services/auth.service.js`<br>• `api/src/services/clinic.service.js` | • Demo profile retrieval & JWT switching<br>• Clinic appointment queue filtering (`WAITING`, `IN_CONSULTATION`, `DISCHARGED`)<br>• Status transition stepper (`PATCH /api/appointments/:id/status`) enforcing `idx_active_consult` |
-| **Diptoneel De** | • `P1_patient_dashboard.png`<br>• `P3_book_appointment.png`<br>• `P5_patient_wallet.png` | **Patient Portal, Booking (Workflow 1), & HSA Wallet**<br>• `web/src/pages/PatientDashboard.jsx`<br>• `web/src/pages/BookAppointment.jsx`<br>• `web/src/pages/Wallet.jsx`<br>• `api/src/services/patient.service.js`<br>• `api/src/services/appointment.service.js`<br>• `api/src/services/audit.service.js` | • **Workflow 1**: PostgreSQL stored procedure `sp_book_appointment()` atomic transaction<br>• Real-time HSA deduction math & insufficient funds error trapping<br>• Financial audit trail (`wallet_audit_logs`) populated by database trigger |
-| **Krishna Saboo** | • `C4_clinic_analytics.png`<br>• `P2_patient_appointments.png`<br>• `S_ui_states.png` | **Clinic Analytics (Workflow 2), UI States, & Patient Appointments**<br>• `web/src/pages/Analytics.jsx`<br>• `web/src/pages/PatientAppointments.jsx`<br>• `web/src/pages/States.jsx`<br>• `web/src/styles/app.css`<br>• `api/src/services/analytics.service.js`<br>• `api/src/middleware/errorHandler.js` | • **Workflow 2**: SQL window functions (`06_window_analytics.sql`) for 7-day moving average copay & `DENSE_RANK()`<br>• Materialized view `mv_clinic_monthly_discharges` and on-demand refresh (`refresh_clinic_monthly_mv()`)<br>• Loading skeleton, empty state, and API error retry cards |
-| **Jyoti Pal** | • `C3_nurse_map.png`<br>• `P4_clinics_reviews.png`<br>• `C5a_clinic_reviews.png`<br>• `C5b_medical_catalog.png` | **Nurse Telemetry Map (Workflow 3), Reviews & Medical Catalog (Workflow 4)**<br>• `web/src/pages/NurseMap.jsx`<br>• `web/src/pages/Clinics.jsx`<br>• `web/src/pages/Reviews.jsx`<br>• `web/src/pages/Catalog.jsx`<br>• `api/src/services/mongo.service.js` | • **Workflow 3**: MongoDB `$geoNear` aggregation pipeline on `NursePings` with `2dsphere` index (5 km geofence)<br>• Interactive Leaflet map with simulated live GPS telemetry polling<br>• **Workflow 4**: MongoDB `$facet` multi-pipeline aggregation on `PatientReviews` (rating distribution, tags, average)<br>• Flexible medical catalog document explorer (`MedicalCatalogs`) |
