@@ -2,9 +2,9 @@
 
 ## Repository Submission Details
 
-- Demo link: 
-- GitHub repository: 
-- Final commit hash: 
+- Demo link: https://drive.google.com/file/d/171S7dNXXXYXHHa-_Vt39NRsdDp1YQ9Az/view?usp=sharing
+- GitHub repository: https://github.com/neel-d9/careconnect
+- Final commit hash: `c50e8ff08bd3fd8a14ce9ce5db037f680cb8482a`
 
 ## Overview
 
